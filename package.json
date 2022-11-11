@@ -1,0 +1,28 @@
+{
+	"name": "scam-sniffer",
+	"description": "A discord bot that uses scam sniffer to detect if a website uses safe functions",
+	"version": "0.0.1",
+	"main": "src/index.js",
+	"author": "Flying Fish & Joky",
+	"license": "MIT",
+	"private": false,
+	"scripts": {
+		"start:dev": "dotenv -e .env.development node .",
+		"start:prod": "dotenv -e .env.production node .",
+		"deploy:commands:dev": "dotenv -e .env.development node src/deploy-commands.js",
+		"deploy:commands:prod": "dotenv -e .env.production node src/deploy-commands.js",
+		"delete:commands:dev": "dotenv -e .env.development node src/delete-commands.js",
+		"delete:commands:prod": "dotenv -e .env.production node src/delete-commands.js"
+	},
+	"dependencies": {
+		"@discordjs/builders": "^1.1.0",
+		"@discordjs/rest": "^1.0.1",
+		"axios": "^1.1.3",
+		"discord.js": "^14.1.2",
+		"dotenv": "^16.0.1"
+	},
+	"devDependencies": {
+		"dotenv-cli": "^6.0.0",
+		"eslint": "^8.21.0"
+	}
+}
