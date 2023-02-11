@@ -5,7 +5,10 @@ const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+	intents: [GatewayIntentBits.Guilds],
+	allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
+});
 
 // Commands
 client.commands = new Collection();
