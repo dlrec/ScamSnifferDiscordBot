@@ -133,7 +133,7 @@ module.exports = {
 
 		const config = {
 			method: 'get',
-			url: `https://detector.scamsniffer.io/api/detect?link=${website}&force=0`,
+			url: `https://detector.scamsniffer.io/api/detect?link=${website}`, // &force=true
 			headers: {
 				Accept: 'application/json',
 				'X-API-KEY': process.env.SCAMSNIFFER_API_KEY,
