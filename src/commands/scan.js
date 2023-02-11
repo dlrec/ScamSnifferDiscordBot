@@ -1,43 +1,81 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 let axios = require('axios');
 
-const safetyRole = '<@&1000172500656865401>';
+const pingRole = false;
+const safetyRole = process.env.SAFETY_ROLE;
 
-function removeHttp(url) {
-	return url.replace(/^https?:\/\//, '');
+function disableHttpLink(url) {
+	return url.replace(/:/g, '[:]');
 }
 
-const introEmbed = (url) =>
+const introEmbed = (url, detectionStatus) =>
 	new EmbedBuilder()
 		.setColor(0xffffff)
 		.setTitle('Website checker')
 		.setDescription(
-			`The API is working on scam detection in the url: ${url} \n This message will be edited when the detection finishes`,
-		);
+            'Scanning for Threats \n' + 
+			'This message will be edited when the scanning finishes. \n' +
+            'For new urls it may take 1-4 minutes to receive a result.',
+		)
+        .addFields(
+            { name: 'URL', value: url},
+            { name: 'Detection Status', value: `${detectionStatus}`},
+        )
+        .setFooter({
+            text: 'Powered by the ScamSniffer Detector API',
+            iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
+        });
 
 const safeEmbed = (url) =>
 	new EmbedBuilder()
-		.setColor(0x00ff00)
+		.setColor(0x257722)
 		.setTitle('Website checker')
 		.setDescription(
-			`The url: ${url} is safe: **\n` +
-				'No threats were detected' +
+			`The url: ${url} looks safe**\n` +
 				'** \n' +
 				"Although ScamSniffer did not detect a threat doesn't mean it's totally safe. \n" +
-				'Always thread carefully and use a burner',
-		);
+                "Always look closely at what is requested to sign. \n" +
+				"When in doubt ask fellow gm.embers for help.",
+		)
+        .addFields(
+            { name: 'URL', value: url},
+            { name: 'Detection Status', value: 'NO THREATS DETECTED'},
+        )
+        .setFooter({
+            text: 'Powered by the ScamSniffer Detector API',
+            iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
+        });
+
+
+// From the Exploits array creates an array with the embed fields
+function createThreatFields(url, array) {
+    let embedFields = [
+        { name: 'URL', value: url},
+        { name: 'Detection Status', value: 'UNSAFE. DO NOT INTERACT'}
+    ];
+
+    array.forEach(function (exploit, i) {
+        embedFields.push({name: `exploit${i}`, value: exploit, inline: true});
+    });
+
+    return embedFields;
+}
 
 const threatEmbed = (url, res) =>
 	new EmbedBuilder()
 		.setColor(0xff0000)
 		.setTitle('Website checker')
 		.setDescription(
-			`**Threat detected**\n` +
-				`The url: ${url} is **NOT SAFE**` +
-				'\n Exploits: **' +
-				res.data['details']['actions'] +
-				'** \n Link is not safe. **DO NOT INTERACT**',
-		);
+			`**THREAT DETECTED**\n\n` +
+				`Link is not safe. **DO NOT INTERACT**`,
+		)
+        .addFields(
+            createThreatFields(url, res.data['details']['actions'])
+        )
+        .setFooter({
+            text: 'Powered by the ScamSniffer Detector API',
+            iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
+        });
 
 async function request(interaction, config, website, secondTry = false) {
 	console.warn(config);
@@ -47,7 +85,7 @@ async function request(interaction, config, website, secondTry = false) {
 			if (res.data['status']) {
 				!secondTry
 					? interaction.reply({
-							embeds: [introEmbed(removeHttp(website))],
+							embeds: [introEmbed(disableHttpLink(website), res.data['status'])],
 							ephemeral: false,
 					  })
 					: null;
@@ -57,27 +95,26 @@ async function request(interaction, config, website, secondTry = false) {
 				}, 5000);
 			} else {
 				console.log(res.data);
-				console.log(res.data['details']['actions']);
 				if (res.data['isSafe']) {
 					secondTry
 						? interaction.editReply({
-								embeds: [safeEmbed(removeHttp(website))],
+								embeds: [safeEmbed(disableHttpLink(website))],
 								ephemeral: false,
 						  })
 						: interaction.reply({
-								embeds: [safeEmbed(removeHttp(website))],
+								embeds: [safeEmbed(disableHttpLink(website))],
 								ephemeral: false,
 						  });
 				} else {
 					secondTry
 						? interaction.editReply({
-								content: safetyRole,
-								embeds: [threatEmbed(removeHttp(website), res)],
+								content: pingRole ? safetyRole : '',
+								embeds: [threatEmbed(disableHttpLink(website), res)],
 								ephemeral: false,
 						  })
 						: interaction.reply({
-								content: safetyRole,
-								embeds: [threatEmbed(removeHttp(website), res)],
+								content: pingRole ? safetyRole : '',
+								embeds: [threatEmbed(disableHttpLink(website), res)],
 								ephemeral: false,
 						  });
 				}
