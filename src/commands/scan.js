@@ -61,7 +61,7 @@ function createThreatFields(url, array) {
     return embedFields;
 }
 
-const threatEmbed = (url, res) =>
+const threatEmbed = (url, res, fromLookupAPI) =>
 	new EmbedBuilder()
 		.setColor(0xff0000)
 		.setTitle('Website checker')
@@ -70,18 +70,45 @@ const threatEmbed = (url, res) =>
 				`Link is not safe. **DO NOT INTERACT**`,
 		)
         .addFields(
-            createThreatFields(url, res.data['details']['actions'])
+            createThreatFields(url, fromLookupAPI ? [] : res.data['details']['actions'])
         )
         .setFooter({
             text: 'Powered by the ScamSniffer Detector API',
             iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
         });
 
+async function lookupCall(interaction, config, website, secondTry = false) {
+	console.warn(config);
+	console.log(`Calling the Lookup API on ${website}`);
+	const promise = axios(config);
+	const dataPromise = promise
+	.then((res) => {
+		console.log(res.data);
+		if (res.data['status'] === 'BLOCKED') {
+					// If Lookup API returns status = 'BLOCKED'
+					// we edit the reply and finish. No need to call the Detector API.
+					return {
+						type: 'editReply',
+						content: pingRole ? safetyRole : '',
+						embed: threatEmbed(disableHttpLink(website), res, true),
+						isSafe: false,
+					};
+				} else {
+					// If the url isn't on the Lookup API then the call will return 'PASSED'
+					// We need to call the Detector API.
+					return { type: 'requestScan', embed: '', isSafe: true };
+				}
+			})
+			.catch((err) => console.log(err));
+		console.log(dataPromise);
+		return dataPromise;
+	}
+
 async function request(interaction, config, website, secondTry = false) {
 	console.warn(config);
 	await axios(config)
 		.then((res) => {
-			console.log({ res });
+			console.log(res.data);
 			if (res.data['status']) {
 				!secondTry
 					? interaction.reply({
@@ -94,7 +121,6 @@ async function request(interaction, config, website, secondTry = false) {
 					request(interaction, config, website, true);
 				}, 5000);
 			} else {
-				console.log(res.data);
 				if (res.data['isSafe']) {
 					secondTry
 						? interaction.editReply({
@@ -109,12 +135,12 @@ async function request(interaction, config, website, secondTry = false) {
 					secondTry
 						? interaction.editReply({
 								content: pingRole ? safetyRole : '',
-								embeds: [threatEmbed(disableHttpLink(website), res)],
+								embeds: [threatEmbed(disableHttpLink(website), res, false)],
 								ephemeral: false,
 						  })
 						: interaction.reply({
 								content: pingRole ? safetyRole : '',
-								embeds: [threatEmbed(disableHttpLink(website), res)],
+								embeds: [threatEmbed(disableHttpLink(website), res, false)],
 								ephemeral: false,
 						  });
 				}
@@ -131,15 +157,43 @@ module.exports = {
 	async execute(interaction) {
 		const website = interaction.options.getString('website');
 
-		const config = {
+		let goDetector = true;
+
+		const configLookup = {
 			method: 'get',
-			url: `https://detector.scamsniffer.io/api/detect?link=${website}`, // &force=true
-			headers: {
-				Accept: 'application/json',
-				'X-API-KEY': process.env.SCAMSNIFFER_API_KEY,
-			},
+			url: 'https://lookup-api.scamsniffer.io/site/check',
+			params: {
+				'api_key': process.env.SCAMSNIFFER_API_KEY,
+				'url': website
+				},
+			  headers: { Accept: 'application/json' }
 		};
 
-		const contentToSend = await request(interaction, config, website);
+		await lookupCall(interaction, configLookup, website).then(async (res) => {
+			if(!res.isSafe) {
+				const contentLookup = {
+					content: 'This is from the Lookup API', // res.content,
+					embeds: [res.embed],
+					ephemeral: false,
+				};
+				goDetector = false;
+				await interaction.reply(contentLookup);
+				return; // Finish
+			}
+		});
+
+		console.log(`goDetector: ${goDetector}`);
+
+		if (goDetector){
+			const config = {
+				method: 'get',
+				url: `https://detector.scamsniffer.io/api/detect?link=${website}`, // &force=true
+				headers: {
+					Accept: 'application/json',
+					'X-API-KEY': process.env.SCAMSNIFFER_API_KEY,
+				},
+			};	
+			const contentToSend = await request(interaction, config, website);
+		}		
 	},
 };
