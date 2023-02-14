@@ -34,8 +34,9 @@ const safeEmbed = (url) =>
 			`The url: ${url} looks safe**\n` +
 				'** \n' +
 				"Although ScamSniffer did not detect a threat doesn't mean it's totally safe. \n" +
-                "Always look closely at what is requested to sign. \n" +
-				"When in doubt ask fellow gm.embers for help.",
+				"- Do not reveal your mnemonic or private key to any one \n"+
+                "- Always look closely at what is requested to sign. \n" +
+				"- When in doubt ask fellow gm.embers for help.",
 		)
         .addFields(
             { name: 'URL', value: url},
