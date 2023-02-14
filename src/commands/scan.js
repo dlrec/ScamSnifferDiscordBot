@@ -117,7 +117,6 @@ async function request(interaction, config, website, secondTry = false) {
 							ephemeral: false,
 					  })
 					: null;
-				console.log(res.data);
 				setTimeout(() => {
 					request(interaction, config, website, true);
 				}, 5000);
