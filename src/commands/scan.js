@@ -5,7 +5,7 @@ const pingRole = false;
 const safetyRole = process.env.SAFETY_ROLE;
 
 function disableHttpLink(url) {
-	return url.replace(/:/g, '[:]');
+	return url.replace(/:/g, '(:)');
 }
 
 const introEmbed = (url, detectionStatus) =>
@@ -18,8 +18,8 @@ const introEmbed = (url, detectionStatus) =>
             'For new urls it may take 1-4 minutes to receive a result.',
 		)
         .addFields(
-            { name: 'URL', value: url},
-            { name: 'Detection Status', value: `${detectionStatus}`},
+            { name: '__URL__:', value: url},
+            { name: '__Detection Status__:', value: `${detectionStatus}`},
         )
         .setFooter({
             text: 'Powered by the ScamSniffer Detector API',
@@ -39,8 +39,8 @@ const safeEmbed = (url) =>
 				"- When in doubt ask fellow gm.embers for help.",
 		)
         .addFields(
-            { name: 'URL', value: url},
-            { name: 'Detection Status', value: 'NO THREATS DETECTED'},
+            { name: '__URL__:', value: url},
+            { name: '__Detection Status__:', value: 'NO THREATS DETECTED'},
         )
         .setFooter({
             text: 'Powered by the ScamSniffer Detector API',
@@ -51,12 +51,12 @@ const safeEmbed = (url) =>
 // From the Exploits array creates an array with the embed fields
 function createThreatFields(url, array) {
     let embedFields = [
-        { name: 'URL', value: url},
-        { name: 'Detection Status', value: 'UNSAFE. DO NOT INTERACT'}
+        { name: '__URL__:', value: url},
+        { name: '__Detection Status__:', value: '**__UNSAFE. DO NOT INTERACT__**'}
     ];
 
     array.forEach(function (exploit, i) {
-        embedFields.push({name: `exploit${i}`, value: exploit, inline: true});
+        embedFields.push({name: `__exploit${i}__:`, value: exploit, inline: true});
     });
 
     return embedFields;
@@ -172,7 +172,7 @@ module.exports = {
 		await lookupCall(interaction, configLookup, website).then(async (res) => {
 			if(!res.isSafe) {
 				const contentLookup = {
-					content: 'This is from the Lookup API', // res.content,
+					content: res.content,
 					embeds: [res.embed],
 					ephemeral: false,
 				};
@@ -187,7 +187,7 @@ module.exports = {
 		if (goDetector){
 			const config = {
 				method: 'get',
-				url: `https://detector.scamsniffer.io/api/detect?link=${website}`, // &force=true
+				url: `https://detector.scamsniffer.io/api/detect?link=${website}&force=true`, // &force=true
 				headers: {
 					Accept: 'application/json',
 					'X-API-KEY': process.env.SCAMSNIFFER_API_KEY,
