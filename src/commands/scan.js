@@ -3,6 +3,7 @@ let axios = require('axios');
 
 const pingRole = false;
 const safetyRole = process.env.SAFETY_ROLE;
+const footerPNG = 'https://cdn.discordapp.com/app-icons/1040431026788384849/96844f028ccbd835eb3e01865480d9fc.png?size=256'
 
 function disableHttpLink(url) {
 	return url.replace(/:/g, '(:)');
@@ -11,7 +12,7 @@ function disableHttpLink(url) {
 const introEmbed = (url, detectionStatus) =>
 	new EmbedBuilder()
 		.setColor(0xffffff)
-		.setTitle('Website checker')
+		//.setTitle('Website checker')
 		.setDescription(
             'Scanning for Threats \n' + 
 			'This message will be edited when the scanning finishes. \n' +
@@ -23,13 +24,13 @@ const introEmbed = (url, detectionStatus) =>
         )
         .setFooter({
             text: 'Powered by the ScamSniffer Detector API',
-            iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
+            iconURL: footerPNG
         });
 
 const safeEmbed = (url) =>
 	new EmbedBuilder()
 		.setColor(0x257722)
-		.setTitle('Website checker')
+		//.setTitle('Website checker')
 		.setDescription(
 			`The url: ${url} looks safe**\n` +
 				'** \n' +
@@ -44,7 +45,7 @@ const safeEmbed = (url) =>
         )
         .setFooter({
             text: 'Powered by the ScamSniffer Detector API',
-            iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
+            iconURL: footerPNG
         });
 
 
@@ -65,17 +66,16 @@ function createThreatFields(url, array) {
 const threatEmbed = (url, res, fromLookupAPI) =>
 	new EmbedBuilder()
 		.setColor(0xff0000)
-		.setTitle('Website checker')
+		.setTitle('THREAT DETECTED')
 		.setDescription(
-			`**THREAT DETECTED**\n\n` +
-				`Link is not safe. **DO NOT INTERACT**`,
+			`Link is not safe. **DO NOT INTERACT**`,
 		)
         .addFields(
             createThreatFields(url, fromLookupAPI ? [] : res.data['details']['actions'])
         )
         .setFooter({
             text: 'Powered by the ScamSniffer Detector API',
-            iconURL: 'https://cdn.discordapp.com/attachments/1040295546352574504/1073957863971635210/scamSnifferLogo.png'
+            iconURL: footerPNG
         });
 
 async function lookupCall(interaction, config, website, secondTry = false) {
